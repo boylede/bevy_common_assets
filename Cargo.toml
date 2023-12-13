@@ -48,6 +48,11 @@ path = "examples/msgpack.rs"
 required-features = ["msgpack"]
 
 [[example]]
+name = "postcard"
+path = "examples/postcard.rs"
+required-features = ["postcard"]
+
+[[example]]
 name = "ron"
 path = "examples/ron.rs"
 required-features = ["ron"]
