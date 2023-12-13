@@ -1,7 +1,14 @@
-use bevy::app::{App, Plugin};
-use bevy::asset::io::Reader;
-use bevy::asset::{Asset, AssetApp, AssetLoader, AsyncReadExt, BoxedFuture, LoadContext};
-use postcard::from_bytes;
+use bevy::{
+    app::{App, Plugin},
+    asset::{
+        io::Reader, saver::AssetSaver, Asset, AssetApp, AssetLoader, AsyncReadExt, AsyncWriteExt,
+        LoadContext,
+    },
+    prelude::*,
+    utils::{thiserror, BoxedFuture},
+};
+use postcard::{from_bytes, to_stdvec};
+use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 use thiserror::Error;
 
@@ -13,7 +20,7 @@ pub struct PostcardAssetPlugin<A> {
 
 impl<A> Plugin for PostcardAssetPlugin<A>
 where
-    for<'de> A: serde::Deserialize<'de> + Asset,
+    for<'de> A: Deserialize<'de> + Asset,
 {
     fn build(&self, app: &mut App) {
         app.init_asset::<A>()
@@ -26,7 +33,7 @@ where
 
 impl<A> PostcardAssetPlugin<A>
 where
-    for<'de> A: serde::Deserialize<'de> + Asset,
+    for<'de> A: Deserialize<'de> + Asset,
 {
     /// Create a new plugin that will load assets from files with the given extensions.
     pub fn new(extensions: &[&'static str]) -> Self {
@@ -42,25 +49,25 @@ struct PostcardAssetLoader<A> {
     _marker: PhantomData<A>,
 }
 
-/// Possible errors that can be produced by [`PostcardAssetLoader`]
+/// Possible errors that can be produced by [`PostcardAssetLoader`] or [`PostcardAssetSaver`]
 #[non_exhaustive]
 #[derive(Debug, Error)]
-pub enum PostcardLoaderError {
+pub enum PostcardAssetError {
     /// An [IO Error](std::io::Error)
     #[error("Could not read the file: {0}")]
     Io(#[from] std::io::Error),
     /// A [Postcard Error](postcard::Error)
     #[error("Could not parse Postcard: {0}")]
-    MsgPackError(#[from] postcard::Error),
+    PostcardError(#[from] postcard::Error),
 }
 
 impl<A> AssetLoader for PostcardAssetLoader<A>
 where
-    for<'de> A: serde::Deserialize<'de> + Asset,
+    for<'de> A: Deserialize<'de> + Asset,
 {
     type Asset = A;
     type Settings = ();
-    type Error = PostcardLoaderError;
+    type Error = PostcardAssetError;
 
     fn load<'a>(
         &'a self,
@@ -78,5 +85,29 @@ where
 
     fn extensions(&self) -> &[&str] {
         &self.extensions
+    }
+}
+
+struct PostcardAssetSaver<A> {
+    _marker: PhantomData<A>,
+}
+
+impl<A: Asset + Serialize> AssetSaver for PostcardAssetSaver<A> {
+    type Asset = A;
+    type Settings = ();
+    type OutputLoader = ();
+    type Error = PostcardAssetError;
+
+    fn save<'a>(
+        &'a self,
+        writer: &'a mut bevy::asset::io::Writer,
+        asset: bevy::asset::saver::SavedAsset<'a, Self::Asset>,
+        _settings: &'a Self::Settings,
+    ) -> BoxedFuture<'a, Result<<Self::OutputLoader as AssetLoader>::Settings, Self::Error>> {
+        Box::pin(async move {
+            let bytes = to_stdvec(&asset.get())?;
+            writer.write_all(&bytes).await?;
+            Ok(())
+        })
     }
 }
