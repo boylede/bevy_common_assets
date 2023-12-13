@@ -19,6 +19,7 @@ yaml = ["dep:serde_yaml"]
 json = ["dep:serde_json"]
 msgpack = ["dep:rmp-serde"]
 xml = ["dep:quick-xml"]
+postcard = ["dep:postcard"]
 
 [dependencies]
 bevy = { version = "0.12", default-features = false, features = ["bevy_asset"] }
@@ -31,6 +32,7 @@ thiserror = "1.0"
 quick-xml = { version = "0.31", features = [ "serialize" ], optional = true }
 serde = { version = "1" }
 anyhow = { version = "1" }
+postcard = {version = "1.0", features = ["use-std"], optional = true}
 
 [dev-dependencies]
 bevy = { version = "0.12" }

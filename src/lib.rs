@@ -56,6 +56,10 @@ pub mod json;
 #[cfg_attr(docsrs, doc(cfg(feature = "msgpack")))]
 #[cfg(feature = "msgpack")]
 pub mod msgpack;
+/// Module containing a Bevy plugin to load assets from `postcard` files with custom file extensions.
+#[cfg_attr(docsrs, doc(cfg(feature = "postcard")))]
+#[cfg(feature = "postcard")]
+pub mod postcard;
 /// Module containing a Bevy plugin to load assets from `ron` files with custom file extensions.
 #[cfg_attr(docsrs, doc(cfg(feature = "ron")))]
 #[cfg(feature = "ron")]
@@ -79,7 +83,8 @@ pub mod yaml;
     feature = "ron",
     feature = "toml",
     feature = "xml",
-    feature = "yaml"
+    feature = "yaml",
+    feature = "postcard",
 ))]
 #[doc = include_str!("../README.md")]
 #[cfg(doctest)]
