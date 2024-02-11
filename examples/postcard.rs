@@ -20,7 +20,6 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.insert_resource(level);
     let tree = ImageHandle(asset_server.load("tree.png"));
     commands.insert_resource(tree);
-
     commands.spawn(Camera2dBundle::default());
 }
 
@@ -39,7 +38,6 @@ fn spawn_level(
                 ..default()
             });
         }
-
         state.set(AppState::Level);
     }
 }
